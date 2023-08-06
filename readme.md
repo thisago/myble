@@ -28,19 +28,21 @@ Use this bot is extremely simple! Just write on any Telegram chat in the followi
 @myble gn 1:2
 ```
 
-<!--
 **Get multiple verses:**
 
 ```text
 @myble lv 2:3-6
-``` -->
+```
 
-<!--
 **Get whole chapter:**
 
 ```text
 @myble deu 2
-``` -->
+```
+
+## TODO
+
+- [ ] Markdown responses
 
 ## License
 

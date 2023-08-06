@@ -1,14 +1,15 @@
 import std/asyncdispatch
 import std/logging
-import std/options
-from std/strutils import strip
+from std/options import get, some
+from std/strutils import strip, join
 from std/strformat import fmt
+from std/sugar import collect
 
 import pkg/db_connector/db_sqlite
 
 import pkg/telebot
 
-from pkg/bibleTools/verses import parseBibleVerses, `$`, inOzzuuBible, BibleVerse
+from pkg/bibleTools import parseBibleVerses, `$`, inOzzuuBible, BibleVerse, UnknownBook
 
 const apiSecretFile {.strdefine.} = "secret.key"
 let apiSecret = strip readFile apiSecretFile
@@ -16,14 +17,33 @@ let apiSecret = strip readFile apiSecretFile
 var db: DbConn
 
 proc getFromDb(verse: BibleVerse): string =
-  if verse.verses.len > 0:
+  if verse.book.book != UnknownBook:
+    let bookId = 10 * verse.book.book.ord
     if verse.verses.len == 1:
-      result = db.getValue(
-        sql"SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?",
-        10 * verse.book.book.ord,
-        verse.chapter,
-        verse.verses[0]
-      )
+      let
+        verseNum = verse.verses[0]
+        text = db.getValue(
+          sql"SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?",
+          bookId,
+          verse.chapter,
+          verseNum
+        )
+      result = fmt"{verseNum} {text}"
+    elif verse.verses.len > 0:
+      let versesQuery = collect(for verse in verse.verses: fmt"verse = {verse}").join " OR "
+      for row in db.rows(
+        sql fmt"SELECT verse, text FROM verses WHERE book_number = ? AND chapter = ? AND ({versesQuery})",
+        bookId,
+        verse.chapter
+      ):
+        result.add fmt"{row[0]} {row[1]}" & "\l"
+    else:
+      for row in db.rows(
+        sql fmt"SELECT verse, text FROM verses WHERE book_number = ? AND chapter = ?",
+        bookId,
+        verse.chapter
+      ):
+        result.add fmt"{row[0]} {row[1]}" & "\l"
 
 proc inlineHandler(b: Telebot, u: InlineQuery): Future[bool] {.async, gcsafe.} =
   {.gcsafe.}:
@@ -43,10 +63,11 @@ proc inlineHandler(b: Telebot, u: InlineQuery): Future[bool] {.async, gcsafe.} =
     res.replyMarkup = some newInlineKeyboardMarkup(@[
       initInlineKeyboardButton(fmt"Open in Ozzuu Bible", verse.inOzzuuBible)
     ])
-    res.inputMessageContent = fmt"""{res.title}
-{getFromDb verse}
-
-""".InputTextMessageContent.some
+    res.inputMessageContent = some InputTextMessageContent(
+      res.title &
+      "\l\l" &
+      getFromDb verse
+    )
 
     results.add res
 
