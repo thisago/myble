@@ -16,5 +16,5 @@ requires "nim >= 1.6.0"
 requires "bibleTools"
 
 requires "db_connector"
-requires "https://github.com/thisago/telebot.nim == @#head"
+requires "telebot"
 requires "cligen"
