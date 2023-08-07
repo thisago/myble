@@ -1,37 +1,47 @@
 import std/asyncdispatch
 import std/logging
 from std/options import get, some
-from std/strutils import strip, join, toLowerAscii, contains, split, replace
+from std/strutils import strip, join, toLowerAscii, contains, split, multiReplace, parseInt
 from std/strformat import fmt
 from std/sugar import collect
+from std/tables import Table, `[]`, `[]=`
 
 import pkg/db_connector/db_sqlite
 
 import pkg/telebot
 
-from pkg/bibleTools import parseBibleVerses, `$`, inOzzuuBible, BibleVerse, UnknownBook
+from pkg/bibleTools import parseBibleVerses, `$`, inOzzuuBible, BibleVerse, UnknownBook, BibleBook, identifyBibleBook
 
 const apiSecretFile {.strdefine.} = "secret.key"
 let apiSecret = strip readFile apiSecretFile
 
-var db: DbConn
+var
+  db: DbConn
+  bookIds: Table[BibleBook, int]
 
 const
   tgMsgMaxLen = 4096
   limitReachedText = "...\n\nText too long, open it online below."
 
 func cleanVerse(verse: string): string =
-  debugecho verse
   var words: seq[string]
-  for word in verse.replace("<", " <").split " ":
-    debugecho word
+  for word in verse.multiReplace({
+    "<": " <",
+    ".>": "/> "
+  }).split " ":
     if word.len > 0 and word[0] != '<':
       words.add word
   result = words.join " "
 
+proc getBookIds =
+  for row in db.rows(sql"SELECT book_number, short_name FROM books_all"):
+    bookIds[row[1].identifyBibleBook.book] = parseInt row[0]
+
 proc getFromDb(verse: BibleVerse): string =
   if verse.book.book != UnknownBook:
-    let bookId = 10 * verse.book.book.ord
+    {.gcsafe.}:
+      let bookId = bookIds[verse.book.book]
+    echo bookId
     if verse.verses.len == 1:
       let
         verseNum = verse.verses[0]
@@ -92,6 +102,9 @@ proc main(mybibleModule: string; dbUser = "", dbPass = "") {.async.} =
   addHandler(L)
 
   db = open(mybibleModule, dbUser, dbPass, "")
+
+  {.gcsafe.}:
+    getBookIds()
 
   let bot = newTeleBot apiSecret
   bot.onInlineQuery inlineHandler
