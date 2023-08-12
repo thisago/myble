@@ -10,14 +10,14 @@
 
 ## About
 
-The [@myble](myble.t.me) is a inline Telegram bot that provides a MyBible module texts in your chat!
+The [@myblebot](myblebot.t.me) is a inline Telegram bot that provides a MyBible module texts in your chat!
 
 ## Usage
 
 Use this bot is extremely simple! Just write on any Telegram chat in the following syntax:
 
 ```text
-@myble <Verse reference>
+@myblebot <Verse reference>
 ```
 
 ### Examples
@@ -25,19 +25,19 @@ Use this bot is extremely simple! Just write on any Telegram chat in the followi
 **Get one verse:**
 
 ```text
-@myble gn 1:2
+@myblebot gn 1:2
 ```
 
 **Get multiple verses:**
 
 ```text
-@myble lv 2:3-6
+@myblebot lv 2:3-6
 ```
 
 **Get whole chapter:**
 
 ```text
-@myble deu 2
+@myblebot deu 2
 ```
 
 ## TODO
