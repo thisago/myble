@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 0.4.0 (2023/08/18)
+
+- Fixed verse first word cropping (again :|)
+- Added custom Ozzuu Bible translation
+- Fixed books table name to work with all MyBible modules
+- Removed logging for release builds
+
 ## Version 0.3.0 (2023/07/06)
 
 - Removed debug echo

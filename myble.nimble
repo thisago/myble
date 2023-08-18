@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.3.0"
+version       = "0.4.0"
 author        = "Thiago Navarro"
 description   = "MyBible Telegram bot"
 license       = "GPL-3.0-or-later"
